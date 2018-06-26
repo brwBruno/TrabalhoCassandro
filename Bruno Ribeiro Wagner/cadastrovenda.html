@@ -1,0 +1,166 @@
+<html ng-app="paginaPrincipal">
+<head>
+    <meta charset="utf-8" />
+    <title>Cadastro Clientes</title>
+    <link rel="stylesheet" href="bootstrap.css">
+    <script src="angular.js"></script>
+        <script>
+            angular.module("paginaPrincipal", []);
+            angular.module("paginaPrincipal").controller("vendaCtrl", function ($scope, $http){
+
+                $scope.cliente = [];
+                $scope.valorDisponivel;
+
+                $scope.carro = [
+                    {marca:"Chevrolet" , modelo: "Onix", valor: 49499},
+                    {marca:"Chevrolet" , modelo: "Spin", valor: 65769},
+                    {marca:"Chevrolet" , modelo: "Cruze", valor: 76709},
+                    {marca:"Renault" , modelo: "Duster", valor: 69999},
+                    {marca:"Renault" , modelo: "Logan", valor: 52559},
+                    {marca:"Renault" , modelo: "Clio", valor: 36749},
+                    {marca:"Honda" , modelo: "Civic", valor: 68409},
+                    {marca:"Honda" , modelo: "Fit", valor: 58809},
+                    {marca:"Honda" , modelo: "City", valor: 69009},
+                    {marca:"Toyota" , modelo: "Corolla", valor: 68299},
+                    {marca:"Toyota" , modelo: "Etios Hatch", valor: 46220},
+                    {marca:"Toyota" , modelo: "Etios Sedan", valor: 48880},
+                ]
+
+                $scope.calcularValorDisponivel = function (renda) {
+                    return renda * 0.30;
+                }
+
+                $scope.calcularValorParcela = function (quanti, valorcarro) {
+                    return valorcarro / quanti; 
+                }
+
+                var listarClientesVenda = function() {
+                    $http.get('http://localhost:8000/api/clientes').then(function (d) {
+                        $scope.cliente = d.data;
+                    })
+                };
+
+                var verificarSeAprovou = function() {
+                    if ($scope.venda.valorparcela < $scope.venda.valordisponivel)
+                        $scope.venda.situacao = "Aprovado";
+                    else
+                        $scope.venda.situacao = "Reprovado";
+                }
+
+                $scope.adicionarVenda = function(venda) {
+                    verificarSeAprovou();
+                    console.log(venda);
+                    $http.post('http://localhost:8000/api/vendas', venda).then(function (d) {
+                        alert("Cadastrado com sucesso");
+                        delete $scope.venda;
+                    })
+                };
+
+                $scope.linparCadastro = function(){
+                    delete $scope.venda;
+                }
+
+                listarClientesVenda();
+            });
+        </script>
+</head>
+<body ng-controller="vendaCtrl" class="background">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">BRW Vendedora</a>
+        <div class="collapse navbar-collapse" id="navbarNavDropdown">
+            <ul class="navbar-nav">
+                <li class="nav-item active">
+                    <a class="nav-link" href="index.html">Home <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="cadastrocliente.html">Cadastrar Cliente</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="listacliente.html">Listar Clientes</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="cadastrovenda.html">Cadastrar Venda</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="listavendas.html">Listar Vendas</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <style>
+        .jumbotron {
+            width: 90%;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: 30px;
+            text-align: center;
+            background-color: silver;
+        }
+        .form-header{
+            text-align: left;
+        }
+        .background{
+            background-image: url("plano-pa.jpg");
+        }
+        .form-group{
+            text-align: left;
+        }
+    </style>
+    <div class="jumbotron">
+        <h4 class="display-3">Cadastro de Clientes</h4>
+    </div>
+    <div class="jumbotron">
+        <form name="vendaForm">
+        <div class="form-header"><h3 class="display-4">Dados do Cliente</h3></div>
+        <div class="form-row">
+            <div class="form-group col-md-8">
+                <label><h6>Nome Cliente</h6></label>
+                <select class="form-control" ng-model="venda.cliente" ng-value="venda.id" ng-options="cli.nome + ' ' + cli.sobrenome for cli in cliente">
+                    <option value="">Selecione um Cliente</option>
+                </select>
+            </div>
+            <div class="form-group col">
+                <label><h6>CPF Cliente</h6></label>
+                <input class="form-control" type="text" name="clienteCPF" ng-model="venda.cliente.cpf" ng-value="venda.cliente.cpf" readonly="true" ng-required="true">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col">
+                <label><h6>Renda Cliente</h6></label>
+                <input class="form-control" type="text" name="clienteRenda" ng-model="venda.cliente.renda" ng-value="venda.cliente.renda" readonly="true" ng-required="true">
+            </div>
+            <div class="form-group col">
+                <label><h6>Valor Disponivel</h6></label>
+                <input class="form-control" type="text" name="clienteValorDis" ng-model="venda.valordisponivel" ng-value="venda.valordisponivel=calcularValorDisponivel(venda.cliente.renda)" readonly="true" ng-required="true">
+            </div>
+        </div>
+        <div class="form-header"><h3 class="display-4">Dados da Venda</h3></div>
+        <div class="form-row">
+            <div class="form-group col">
+                <label><h6>Modelo Carro</h6></label>
+                <select class="form-control" name="modelocarro" ng-model="venda.carro.modelo" ng-value="" ng-options="car.modelo for car in carro"></select>
+            </div>
+            <div class="form-group col">
+                <label><h6>Marca Carro</h6></label>
+                <input class="form-control" type="text" name="marcacarro" ng-model="venda.carro.modelo.marca" ng-required="true">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group col">
+                <label><h6>Valor Carro</h6></label>
+                <input class="form-control" type="text" name="valorcarro" ng-model="venda.carro.modelo.valor" readonly="true" ng-required="true">                
+            </div>
+            <div class="form-group col">
+                <label><h6>Quantidade Parcelas</h6></label>
+                <input class="form-control" type="text" name="quantiparcela" ng-model="venda.quantparcela" ng-required="true">
+            </div>
+            <div class="form-group col">
+                <label><h6>Valor Parcela</h6></label>
+                <input class="form-control" type="text" name="valorparcela" ng-model="venda.valorparcela" ng-value="venda.valorparcela=calcularValorParcela(venda.quantparcela, venda.carro.modelo.valor)" ng-required="true">
+            </div>
+        </div>
+        <button class="btn btn-success btn-block" ng-click="adicionarVenda(venda)" ng-disabled="vendaForm.$invalid">Confirmar Venda</button>
+        <button class="btn btn-danger btn-block" ng-click="linparCadastro()">Cancelar</button>
+    </div>
+</body>
+</html>
